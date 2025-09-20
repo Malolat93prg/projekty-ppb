@@ -1,0 +1,14 @@
+# system
+.DS_Store
+Thumbs.db
+
+# tymczasowe / eksporty
+*.tmp
+*.log
+~$*.docx
+~$*.pptx
+
+# katalogi robocze
+/build/
+/dist/
+/node_modules/
