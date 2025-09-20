@@ -1,0 +1,14 @@
+{
+  "project_name": "Auto-nauka PPB",
+  "timezone_label": "Europe/Warsaw",
+  "modules": [
+    "Prawo i administracja",
+    "Zarządzanie i organizacja",
+    "Marketing i reklama",
+    "Fundraising i sponsorzy",
+    "Edukacja i BRD",
+    "Media i multimedia",
+    "Rozwój strategiczny"
+  ],
+  "panel_width": 17
+}
