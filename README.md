@@ -1,58 +1,44 @@
-# 🚦 Projekty Stowarzyszenia **Polska Potęga Bezpieczeństwa**  
+# PPB GitHub Actions Runner — auto-raport nauki (gotowiec)
 
-👥 Repozytorium zawiera **pełne materiały projektowe** realizowane przez Stowarzyszenie **Polska Potęga Bezpieczeństwa (PPB)**.  
-To centralne miejsce przechowywania **dokumentów, grafik, prezentacji i raportów**, dzięki którym nasze projekty są dostępne w jednym miejscu i mogą być wykorzystywane przez sponsorów, partnerów oraz instytucje państwowe.  
+Ten pakiet uruchamia **automatyczne raportowanie nauki** w chmurze (GitHub Actions).
+Co godzinę powstaje `reports/latest_report.md` z panelem postępu, a (opcjonalnie) leci powiadomienie na Telegram.
 
----
+## Szybki start (5 kroków)
+1. **Utwórz repo** na GitHub (np. `ppb-auto-nauka`) i **wrzuć** całą zawartość tego folderu.
+2. W repo przejdź do **Settings → Secrets and variables → Actions → New repository secret** i dodaj (opcjonalnie do powiadomień):
+   - `TELEGRAM_TOKEN` — token od @BotFather
+   - `TELEGRAM_CHAT_ID` — ID Twojej rozmowy z botem (lub grupy)
+3. (Opcjonalnie) skopiuj `config.sample.json` → `config.json` i zmień:
+   - `"timezone": "Europe/Warsaw"` (już ustawione),
+   - dodaj/usuń moduły w `"modules"`,
+   - `"telegram.enabled": true` jeśli chcesz powiadomienia.
+4. Przejdź do **Actions** w repo i włącz workflow (jeśli GitHub pyta o zgodę). Możesz też odpalić ręcznie — **Run workflow**.
+5. Poczekaj chwilę. W katalogu `reports/` pojawi się `latest_report.md`. Jeśli włączyłeś Telegram — przyjdzie krótkie powiadomienie.
 
-## 🎯 Cele Repozytorium
-- 🛡️ Poprawa **bezpieczeństwa pieszych i kierowców** na drogach.  
-- 📢 Prowadzenie **kampanii społecznych i edukacyjnych**.  
-- 🤝 Współpraca z **ministerstwami, szkołami i sponsorami**.  
-- 📚 Tworzenie **profesjonalnych materiałów edukacyjnych i promocyjnych**.  
+## Gdzie edytuję treść nauki?
+- Dodawaj pliki `.md` lub `.txt` do folderu `knowledge/` — pierwszy wiersz będzie nagłówkiem w raporcie.
+- Workflow działa **co godzinę** (zmień w `.github/workflows/auto_report.yml` — CRON).
 
----
+## Jak udostępnić raport do dalszego rozwijania wiedzy?
+- Skopiuj zawartość `reports/latest_report.md` i wklej w rozmowie, albo
+- Pobierz plik i prześlij w czacie — rozwinę go w **Strumieniu Wiedzy**.
 
-## 📑 Zawartość Repozytorium
-- 📄 **Dokumenty główne** (DOCX, PDF)  
-- 🎞️ **Prezentacje** (PPTX, PDF)  
-- 🖼️ **Plakaty, ulotki i grafiki reklamowe**  
-- 📊 **Raporty i podsumowania projektów**  
-- 💼 **Pakiety sponsorskie i oferty współpracy**  
+## Dostosowanie CRON
+W pliku `.github/workflows/auto_report.yml`:
+```
+schedule:
+  - cron: '0 * * * *'   # co godzinę (UTC)
+```
+Przykłady:
+- co 15 min: `*/15 * * * *`
+- codziennie 19:00 UTC: `0 19 * * *` (pamiętaj o różnicy czasu z Europe/Warsaw).
 
----
+## Bezpieczeństwo
+- Tokeny trzymaj tylko w **GitHub Secrets**.
+- Nie commituj `config.json` z danymi wrażliwymi.
 
-## 🚀 Aktualne Projekty
-1. **Bezpieczny Pieszy** – kampania edukacyjna zwiększająca widoczność pieszych.  
-2. **Zwolnij przy przejściu** – program ograniczania prędkości w strefach przejść.  
-3. **Odblask ratuje życie** – akcja rozdawania odblasków i edukacji w szkołach.  
+## Co generuje raport?
+- Paski postępu (ASCII), % i ETA (symulowane / do podpięcia pod Twoje metryki).
+- Lista ostatnich plików z `knowledge/`.
 
----
-
-## 📷 Wizualizacje (mockupy)
-*(Przykładowe materiały graficzne znajdziesz w folderze `/grafika`)*  
-
-- Billboardy i citylighty 🏙️  
-- Banery reklamowe 🎨  
-- Ulotki A5 i plakaty A2 📰  
-- Materiały social media (FB, Instagram, TikTok) 📱  
-
----
-
-## 🏆 Dla Sponsorów i Partnerów
-Dzięki współpracy z nami otrzymujesz:  
-- 📺 Widoczność w kampaniach ogólnopolskich.  
-- 📰 Logotyp w materiałach drukowanych i online.  
-- 📊 Raport z wynikami kampanii i zwrotem z inwestycji (ROI).  
-- 🏅 Certyfikat **Partnera Bezpieczeństwa Ruchu Drogowego**.  
-
----
-
-## 📬 Kontakt
-🌐 Strona WWW: [www.stowarzyszenieppb.pl](http://www.stowarzyszenieppb.pl)  
-✉️ E-mail: biuro@stowarzyszenieppb.pl  
-📍 Polska  
-
----
-
-⭐ **Polska Potęga Bezpieczeństwa** – razem dla życia, razem dla bezpieczeństwa! 🚦
+Masz pytania? Wrzucasz raport — ja rozbudowuję wiedzę i moduły dalej.

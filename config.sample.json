@@ -1,0 +1,19 @@
+{
+  "project_name": "Auto-nauka PPB",
+  "timezone": "Europe/Warsaw",
+  "modules": [
+    "Prawo i administracja",
+    "Zarządzanie i organizacja",
+    "Marketing i reklama",
+    "Fundraising i sponsorzy",
+    "Edukacja i BRD",
+    "Media i multimedia",
+    "Rozwój strategiczny"
+  ],
+  "telegram": {
+    "enabled": false,
+    "token_env": "TELEGRAM_TOKEN",
+    "chat_id_env": "TELEGRAM_CHAT_ID"
+  },
+  "panel_width": 17
+}
