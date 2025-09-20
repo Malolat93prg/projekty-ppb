@@ -50,7 +50,7 @@ def main():
     KNOW.mkdir(parents=True, exist_ok=True)
 
     now = datetime.datetime.now()
-    now_str = now.strftime("%Y-%m-%d %H:%M:%S")  # etykieta czasu
+    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
 
     random.seed(now.hour)
     w = int(cfg.get("panel_width", 17))
