@@ -1,41 +1,33 @@
-import os, ssl, smtplib, pathlib
+import os, ssl, smtplib
 from email.message import EmailMessage
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-REPORT = ROOT / "reports" / "latest_report.md"
+REPORT_PATH = "reports/latest_report.md"
 
-def send_email(subject: str, body: str, to_addr: str):
-    smtp_host = os.getenv("SMTP_HOST")
-    smtp_port = int(os.getenv("SMTP_PORT","587"))
-    smtp_user = os.getenv("SMTP_USER")
-    smtp_pass = os.getenv("SMTP_PASS")
-    from_addr = os.getenv("SMTP_FROM", smtp_user)
+def main():
+    with open(REPORT_PATH, "r", encoding="utf-8") as f:
+        body = f.read()
 
-    if not all([smtp_host, smtp_port, smtp_user, smtp_pass, to_addr]):
-        print("Email pominięty — brak SMTP/EMAIL_TO.")
-        return
+    now_pl = datetime.now(ZoneInfo(os.environ.get("TZ", "Europe/Warsaw")))
+    subject = f"[PPB] Raport godzinny – {now_pl.strftime('%Y-%m-%d %H:%M')}"
 
     msg = EmailMessage()
     msg["Subject"] = subject
-    msg["From"] = from_addr
-    msg["To"] = to_addr
+    msg["From"]    = os.environ["MAIL_FROM"]
+    msg["To"]      = os.environ["MAIL_TO"]
     msg.set_content(body)
 
-    ctx = ssl.create_default_context()
-    with smtplib.SMTP(smtp_host, smtp_port) as s:
-        s.starttls(context=ctx)
-        s.login(smtp_user, smtp_pass)
-        s.send_message(msg)
-        print("Wysłano e-mail do:", to_addr)
+    host = os.environ["SMTP_HOST"]
+    port = int(os.environ.get("SMTP_PORT", "465"))
+    user = os.environ["SMTP_USER"]
+    pwd  = os.environ["SMTP_PASS"]
 
-def main():
-    to_addr = os.getenv("EMAIL_TO", "github93@wp.pl")
-    if REPORT.exists():
-        body = REPORT.read_text(encoding="utf-8")
-    else:
-        body = "Brak pliku raportu."
-
-    send_email("PPB Auto-raport (GitHub Actions)", body, to_addr)
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL(host, port, context=context) as smtp:
+        smtp.login(user, pwd)
+        smtp.send_message(msg)
+    print("Email sent OK")
 
 if __name__ == "__main__":
     main()
