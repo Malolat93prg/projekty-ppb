@@ -1,0 +1,24 @@
+name: Daily Report 20:00 Warsaw
+on:
+  schedule: [ { cron: "0 18 * * *" } ]
+  workflow_dispatch:
+permissions: { contents: write }
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: actions/setup-python@v4
+        with: { python-version: "3.11" }
+      - run: pip install -r requirements.txt
+      - run: python tools/generate_daily.py
+      - name: Commit & push (PAT)
+        env:
+          MACHINE_PAT: ${{ secrets.MACHINE_PAT }}
+          GIT_AUTHOR_NAME: "PPB Bot"
+          GIT_AUTHOR_EMAIL: "github93@wp.pl"
+          GIT_COMMITTER_NAME: "PPB Bot"
+          GIT_COMMITTER_EMAIL: "github93@wp.pl"
+        run: |
+          bash tools/commit_with_pat.sh "chore(reports): daily" "reports/daily/**/*.md"
