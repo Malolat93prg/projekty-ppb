@@ -1,0 +1,11 @@
+# PPB – raport weekly
+
+**Czas lokalny:** 2025-09-21 13:39:35 CEST
+
+## Projekty
+- Bezpieczny Pieszy ([projects/bezpieczny_pieszy.md](../projects/bezpieczny_pieszy.md))
+- Odblask Ratuje Zycie ([projects/odblask_ratuje_zycie.md](../projects/odblask_ratuje_zycie.md))
+- Zwolnij Przy Przejsciu ([projects/zwolnij_przy_przejsciu.md](../projects/zwolnij_przy_przejsciu.md))
+
+## Status
+- Generacja automatyczna przez GitHub Actions.
