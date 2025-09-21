@@ -1,0 +1,48 @@
+name: PPB Reports
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # co godzinę
+  workflow_dispatch:       # ręczne uruchomienie
+
+permissions:
+  contents: write   # pozwala commitować raporty
+
+jobs:
+  hourly_report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Generate hourly report
+        run: |
+          python tools/generate_report.py
+
+      - name: Commit & push hourly report
+        run: |
+          git config --global user.name "PPB Bot"
+          git config --global user.email "github93@wp.pl"
+          git pull --rebase
+          git add reports/latest_report.md
+          git commit -m "Update hourly report" || echo "No changes"
+          git push
+
+  daily_email:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v
