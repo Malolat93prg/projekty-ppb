@@ -1,0 +1,5 @@
+.DS_Store
+*.tmp
+*.log
+reports/*/*.html
+knowledge/.state.daily.json
