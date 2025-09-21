@@ -1,14 +1,5 @@
 {
-  "project_name": "Auto-nauka PPB",
-  "timezone_label": "Europe/Warsaw",
-  "modules": [
-    "Prawo i administracja",
-    "Zarządzanie i organizacja",
-    "Marketing i reklama",
-    "Fundraising i sponsorzy",
-    "Edukacja i BRD",
-    "Media i multimedia",
-    "Rozwój strategiczny"
-  ],
-  "panel_width": 17
+  "Bezpieczny Pieszy": { "progress": 35, "eta": "2025-09-25 18:00" },
+  "Zwolnij przy przejściu": { "progress": 20, "eta": "2025-09-28 12:00" },
+  "Odblask ratuje życie": { "progress": 10, "eta": "2025-10-02 17:30" }
 }
