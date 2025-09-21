@@ -1,7 +1,7 @@
 # Plan nauki — Strumień (skrót do raportów)
 
 ## Social media (FB/IG/TikTok/YT)
-- Format postów, CTA, harmonogram publikacji.
+- Format postów, CTA, harmonogram.
 - Reels/Shorts: storyboard 15–30s.
 - Moderacja i zarządzanie kryzysem.
 
