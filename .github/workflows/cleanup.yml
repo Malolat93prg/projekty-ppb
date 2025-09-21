@@ -1,0 +1,27 @@
+name: Cleanup (artifacts + old hourly reports)
+
+on:
+  schedule:
+    - cron: "0 2 * * 0"  # every Sunday 03:00 Warsaw (02:00 UTC)
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Delete old reports (older than 30 days)
+        run: |
+          find reports/ -type f -name "report-*.md" -mtime +30 -delete
+          find reports/ -type f -name "report-*.zip" -mtime +30 -delete
+
+      - name: Cleanup artifacts
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: |
+            hourly_report
+            daily_report
+            weekly_report
+          failOnError: false
