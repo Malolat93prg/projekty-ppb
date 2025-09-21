@@ -1,0 +1,67 @@
+name: Monthly PDF Report (1st day, 20:05 Warsaw)
+
+on:
+  schedule:
+    # Run every day at 18:05 UTC (20:05 Warsaw in summer, 19:05 in winter).
+    # The Python gate below ensures we only *generate* on the 1st at 20:05 Warsaw.
+    - cron: "5 18 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Run now (ignore day/hour gate)"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  monthly_pdf:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Gate: only 1st at 20:05 Europe/Warsaw (skip otherwise)
+        if: ${{ inputs.force != 'true' }}
+        run: |
+          python - <<'PY'
+          from datetime import datetime
+          from zoneinfo import ZoneInfo
+          now = datetime.now(ZoneInfo("Europe/Warsaw"))
+          print("Local Europe/Warsaw:", now.isoformat())
+          if not (now.day == 1 and now.hour == 20):
+              print("Not the scheduled local time (1st @ 20:xx). Skipping with exit 78.")
+              raise SystemExit(78)
+          PY
+
+      - name: Generate monthly PDF
+        run: |
+          python tools/pdf_monthly.py
+
+      - name: Upload artifact (PDF)
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-pdf
+          path: reports/monthly/*.pdf
+
+      - name: Commit PDF to repo
+        run: |
+          git config --global user.name  "PPB Bot"
+          git config --global user.email "github93@wp.pl"
+          git add reports/monthly/*.pdf || true
+          git commit -m "Add monthly PDF report [skip ci]" || echo "No changes to commit"
+          # pull remote changes to avoid non-fast-forward then push
+          git pull --rebase origin ${{ github.ref_name }} || echo "Nothing to rebase"
+          git push || echo "No push (nothing to update)"
