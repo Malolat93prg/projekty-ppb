@@ -1,0 +1,39 @@
+name: Daily Report (PPB)
+
+on:
+  schedule:
+    - cron: "0 18 * * *"   # 20:00 czasu PL = 18:00 UTC (zimą 19:00 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  daily:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate report (daily)
+        env:
+          TZ: ${{ secrets.TZ }}
+        run: |
+          python tools/generate_report.py
+
+      - name: Send report via email
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_TO:   ${{ secrets.MAIL_TO }}
+          TZ:        ${{ secrets.TZ }}
+        run: |
+          python tools/email_sender.py
