@@ -1,13 +1,13 @@
 
-name: Weekly Reports Archive (Sunday 20:00 Warsaw)
+name: Daily Email (20:00 Warsaw)
 on:
   schedule:
-    - cron: "0 18 * * 0"   # Niedziela 20:00 Warsaw ~= 18:00 UTC
+    - cron: "0 18 * * *"   # 20:00 Warsaw ~= 18:00 UTC
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  weekly_archive:
+  daily_email:
     runs-on: ubuntu-latest
     env:
       TZ: Europe/Warsaw
@@ -22,16 +22,20 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt || true
-      - name: Generate weekly report & zip
+      - name: Generate daily report
         run: |
-          python tools/generate_report.py --mode weekly
-          python tools/weekly_archive.py
-      - name: Upload weekly artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: weekly-reports-archive
-          path: reports/weekly/*.zip
-      - name: Commit & push weekly archive note
+          python tools/generate_report.py --mode daily
+      - name: Send report via email
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_TO:   ${{ secrets.MAIL_TO }}
+        run: |
+          python tools/email_sender.py
+      - name: Commit & push daily confirmation
         run: |
           git config --global user.name "PPB Bot"
           git config --global user.email "github93@wp.pl"
@@ -42,5 +46,5 @@ jobs:
           git pull origin main --rebase || true
           git stash pop || true
           git add -A
-          git commit -m "Weekly archive prepared [skip ci]" || echo "Nothing to commit"
+          git commit -m "Daily report email sent [skip ci]" || echo "Nothing to commit"
           git push

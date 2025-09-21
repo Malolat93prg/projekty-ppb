@@ -1,13 +1,13 @@
 
-name: Weekly Reports Archive (Sunday 20:00 Warsaw)
+name: PPB Reports
 on:
   schedule:
-    - cron: "0 18 * * 0"   # Niedziela 20:00 Warsaw ~= 18:00 UTC
+    - cron: "0 * * * *"   # co godzinę (UTC)
   workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  weekly_archive:
+  hourly_report:
     runs-on: ubuntu-latest
     env:
       TZ: Europe/Warsaw
@@ -22,16 +22,10 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt || true
-      - name: Generate weekly report & zip
+      - name: Generate hourly report
         run: |
-          python tools/generate_report.py --mode weekly
-          python tools/weekly_archive.py
-      - name: Upload weekly artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: weekly-reports-archive
-          path: reports/weekly/*.zip
-      - name: Commit & push weekly archive note
+          python tools/generate_report.py --mode hourly
+      - name: Commit & push hourly report
         run: |
           git config --global user.name "PPB Bot"
           git config --global user.email "github93@wp.pl"
@@ -42,5 +36,5 @@ jobs:
           git pull origin main --rebase || true
           git stash pop || true
           git add -A
-          git commit -m "Weekly archive prepared [skip ci]" || echo "Nothing to commit"
+          git commit -m "Hourly report [skip ci]" || echo "Nothing to commit"
           git push
