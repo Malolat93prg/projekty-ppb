@@ -1,0 +1,17 @@
+[
+  {
+    "name": "status:planning",
+    "color": "5A9",
+    "description": "W planie"
+  },
+  {
+    "name": "status:in-progress",
+    "color": "F2C94C",
+    "description": "W toku"
+  },
+  {
+    "name": "status:done",
+    "color": "2D9CDB",
+    "description": "Zakończone"
+  }
+]
