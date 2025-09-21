@@ -1,0 +1,29 @@
+name: Weekly Reports Archive (Sunday 20:10 Warsaw)
+
+on:
+  schedule:
+    - cron: "10 18 * * 0"  # 18:10 UTC ~ 20:10 Warsaw
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  archive_reports:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Zip reports/
+        run: |
+          python tools/archive_reports.py
+      - name: Commit archive
+        run: |
+          git config --global user.name "PPB Bot"
+          git config --global user.email "github93@wp.pl"
+          git add archives/*.zip
+          git commit -m "Weekly reports archive [skip ci]" || echo "No changes"
+          git pull --rebase --autostash
+          git push
