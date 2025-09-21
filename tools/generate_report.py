@@ -1,83 +1,113 @@
-import os, json, datetime, glob, random, pathlib
+# tools/generate_report.py
+# Generator raportów: tworzy reports/latest_report.md + archiwum reports/report-YYYY-MM-DD_HHMM.md
+# Czyta dane z:
+#  - knowledge/learning_plan.md (plan nauki, opcjonalnie)
+#  - projects/status.json      (status projektów, opcjonalnie)
+# Nie wymaga dodatkowych bibliotek.
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
-REPORTS = ROOT / "reports"
-KNOW = ROOT / "knowledge"
-CONFIG = ROOT / "config.json"
+import os
+import json
+from pathlib import Path
+from datetime import datetime
+try:
+    from zoneinfo import ZoneInfo  # Python 3.9+
+except Exception:
+    ZoneInfo = None
 
-DEFAULT = {
-    "project_name": "Auto-nauka PPB",
-    "timezone_label": "Europe/Warsaw",
-    "modules": [
-        "Prawo i administracja",
-        "Zarządzanie i organizacja",
-        "Marketing i reklama",
-        "Fundraising i sponsorzy",
-        "Edukacja i BRD",
-        "Media i multimedia",
-        "Rozwój strategiczny",
-    ],
-    "panel_width": 17
-}
+REPO_ROOT = Path(__file__).resolve().parents[1]
+REPORTS_DIR = REPO_ROOT / "reports"
+KNOWLEDGE_PLAN = REPO_ROOT / "knowledge" / "learning_plan.md"
+PROJECTS_STATUS = REPO_ROOT / "projects" / "status.json"
 
-def load_cfg():
-    if CONFIG.exists():
+TZ = os.environ.get("TZ", "Europe/Warsaw")
+
+def now_pl():
+    if ZoneInfo:
+        return datetime.now(ZoneInfo(TZ))
+    return datetime.now()
+
+def safe_read_text(path: Path, fallback: str = "") -> str:
+    try:
+        return path.read_text(encoding="utf-8")
+    except Exception:
+        return fallback
+
+def load_projects_status():
+    # Spodziewany format:
+    # {
+    #   "Bezpieczny Pieszy": {"progress": 42, "eta": "2025-09-21 20:00"},
+    #   "Zwolnij przy przejściu": {"progress": 18, "eta": "2025-09-22 12:00"},
+    #   "Odblask ratuje życie": {"progress": 5, "eta": "2025-09-25 18:30"}
+    # }
+    if PROJECTS_STATUS.exists():
         try:
-            return json.loads(CONFIG.read_text(encoding="utf-8"))
+            data = json.loads(PROJECTS_STATUS.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return data
         except Exception:
             pass
-    return DEFAULT
+    # Domyślne wartości, jeśli pliku brak:
+    return {
+        "Bezpieczny Pieszy": {"progress": 0, "eta": "-"},
+        "Zwolnij przy przejściu": {"progress": 0, "eta": "-"},
+        "Odblask ratuje życie": {"progress": 0, "eta": "-"}
+    }
 
-def bar(p, w=17):
-    full = int(p * w)
-    return "█"*full + "-"*(w-full)
+def projects_table(data: dict) -> str:
+    lines = []
+    lines.append("| Projekt | Postęp | ETA |")
+    lines.append("|--------|--------|-----|")
+    for name, meta in data.items():
+        prog = f"{int(meta.get('progress', 0))}%"
+        eta = str(meta.get('eta', "-"))
+        lines.append(f"| {name} | {prog} | {eta} |")
+    return "\n".join(lines)
 
-def summarize_notes(limit=20):
-    items = []
-    if KNOW.exists():
-        for p in sorted(KNOW.iterdir()):
-            if p.is_file():
-                try:
-                    head = p.read_text(encoding="utf-8", errors="ignore").splitlines()[0].strip()
-                except Exception:
-                    head = ""
-                items.append((p.name, head or "(brak nagłówka)"))
-    return items[:limit]
+def make_report() -> str:
+    now = now_pl()
+    ts_date = now.strftime("%Y-%m-%d")
+    ts_time = now.strftime("%H:%M")
+    ts_file = now.strftime("%Y-%m-%d_%H%M")
+
+    learning = safe_read_text(
+        KNOWLEDGE_PLAN,
+        fallback=(
+            "- (Uzupełnij `knowledge/learning_plan.md` – tu pokażę zarys planu nauki)\n"
+            "- Sekcje: Social media, Fundraising, BRD, Produkcja materiałów, Prawo dla NGO, Sponsorzy\n"
+        )
+    )
+    pstatus = load_projects_status()
+    ptable = projects_table(pstatus)
+
+    content = f"""# Raport godzinowy — PPB
+**Data:** {ts_date}  **Godzina (Europe/Warsaw):** {ts_time}
+
+## 1) Status projektów
+{ptable}
+
+## 2) Plan nauki (wyciąg)
+{learning}
+
+## 3) Najbliższe działania (auto-sugestie)
+- Aktualizacja statusu projektów w `projects/status.json`.
+- Rozszerzenie `knowledge/learning_plan.md` o dzisiejsze tematy.
+- Przygotowanie mockupów i KPI do raportu dziennego (20:00).
+
+*Raport generowany automatycznie przez `tools/generate_report.py`.*
+"""
+    return content, ts_file
+
+def write_reports(content: str, ts_file: str):
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    latest = REPORTS_DIR / "latest_report.md"
+    archive = REPORTS_DIR / f"report-{ts_file}.md"
+    latest.write_text(content, encoding="utf-8")
+    archive.write_text(content, encoding="utf-8")
 
 def main():
-    cfg = load_cfg()
-    REPORTS.mkdir(parents=True, exist_ok=True)
-    KNOW.mkdir(parents=True, exist_ok=True)
-
-    now = datetime.datetime.now()
-    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
-
-    random.seed(now.hour)
-    w = int(cfg.get("panel_width", 17))
-
-    lines = [
-        f"# Raport auto-nauki — {cfg['project_name']}",
-        f"Stan na: {now_str} ({cfg.get('timezone_label','Europe/Warsaw')})",
-        "",
-        "```"
-    ]
-    for m in cfg["modules"]:
-        pct = 0.30 + random.random()*0.55
-        eta_days = max(1, int((1.0 - pct) * 10))
-        lines.append(f"{m:26} [{bar(pct,w)}] {int(pct*100):>3}%   ETA: {eta_days} dni   🕒 {now.strftime('%H:%M')}")
-    lines.append("```")
-    lines.append("")
-
-    notes = summarize_notes()
-    if notes:
-        lines.append("## Nowe / zaktualizowane notatki")
-        for fname, head in notes:
-            lines.append(f"- **{fname}** — {head}")
-        lines.append("")
-
-    out = REPORTS / "latest_report.md"
-    out.write_text("\n".join(lines), encoding="utf-8")
-    print("Zapisano:", out)
+    content, ts_file = make_report()
+    write_reports(content, ts_file)
+    print("Report generated:", f"reports/report-{ts_file}.md")
 
 if __name__ == "__main__":
     main()
