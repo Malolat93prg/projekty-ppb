@@ -1,6 +1,6 @@
 # Weekly Summary — 2025-09-21
 
-**Timezone:** Europe/Warsaw | **Generated:** 2025-09-21 14:02:31 CEST
+**Timezone:** Europe/Warsaw | **Generated:** 2025-09-21 14:04:05 CEST
 
 ## Highlights
 - Placeholder highlights (add more sources as needed).
