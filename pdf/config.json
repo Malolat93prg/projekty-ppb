@@ -1,0 +1,11 @@
+{
+  "title": "Bezpieczny Pieszy — materiały premium",
+  "subtitle": "Kompletny pakiet: cele, KPI, plan działań, pakiety sponsorskie",
+  "contact": "Stowarzyszenie PPB • www.stowarzyszenieppb.pl • kontakt@stowarzyszenieppb.pl",
+  "logo": null,
+  "sections": [
+    {"title":"Executive summary","bullets":["Zwiększamy bezpieczeństwo pieszych w rejonie przejść","Cel: spadek zdarzeń / wzrost widoczności (odblaski)","KPI: liczba szkół, odblasków, zasięg mediów"]},
+    {"title":"Działania","bullets":["Edukacja szkolna + eventy miejskie","Kampania OOH + social (FB/IG/TikTok/YouTube)","Plakaty A2, ulotki A5, spoty 15/30s"]},
+    {"title":"Sponsoring","bullets":["Mecenas / Partner Główny / Wspierający / Lokalny","Korzyści: ekspozycje logo, AVE, case-study"]},
+    {"title":"Ewaluacja","bullets":["Ankiety pre/post, dokumentacja foto/wideo","Raport premium PDF i dashboard KPI"]}  ]
+}
