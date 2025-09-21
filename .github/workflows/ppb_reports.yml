@@ -1,0 +1,126 @@
+name: PPB Reports (Hourly + Daily Email)
+
+on:
+  # 1) Co godzinę – generowanie raportu do repo (bez maila)
+  schedule:
+    - cron: "0 * * * *"     # hourly (UTC)
+
+    # 2) Raz dziennie o 20:00 Europe/Warsaw – wysyłka maila
+    #    (obsługa DST: workflow odpala się o 18:00 i 19:00 UTC,
+    #    ale job wyśle maila tylko, gdy lokalna godzina == 20)
+    - cron: "0 18 * * *"    # approx 20:00 PL (CEST)
+    - cron: "0 19 * * *"    # approx 20:00 PL (CET)
+
+  # Możliwość ręcznego uruchomienia
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  report-hourly:
+    # działa dla każdego wywołania godzinnego
+    if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Generate report (latest + archive)
+        env:
+          TZ: ${{ secrets.TZ }}   # np. Europe/Warsaw
+        run: |
+          python tools/generate_report.py
+
+      - name: Commit & push hourly report
+        run: |
+          git config --global user.name  "PPB Bot"
+          git config --global user.email "actions@github.com"
+          git add reports/latest_report.md reports/report-*.md || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Hourly report update [skip ci]"
+            git push
+          fi
+
+      - name: Upload artifact (hourly reports)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppb-hourly-report
+          path: |
+            reports/latest_report.md
+            reports/report-*.md
+          if-no-files-found: warn
+
+  report-daily-email:
+    # odpala się dla 18:00/19:00 UTC – ale wyśle mail tylko jeśli w PL jest 20:00
+    if: github.event.schedule == '0 18 * * *' || github.event.schedule == '0 19 * * *' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Check local time == 20 (Europe/Warsaw)
+        shell: bash
+        env:
+          TZ: ${{ secrets.TZ }}   # Europe/Warsaw
+        run: |
+          echo "Current local time ($(TZ=$TZ date))"
+          HOUR=$(TZ=$TZ date +%H)
+          if [ "$HOUR" != "20" ]; then
+            echo "It's not 20:00 local time — skipping email."
+            exit 0
+          fi
+
+      - name: Generate report (daily confirmation)
+        env:
+          TZ: ${{ secrets.TZ }}
+        run: |
+          python tools/generate_report.py
+
+      - name: Send report via email (with attachments)
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}    # smtp.gmail.com
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}    # 465 (SSL) lub 587 (STARTTLS)
+          SMTP_USER: ${{ secrets.SMTP_USER }}    # michal.lasota1993@gmail.com
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}    # Google App Password
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}    # michal.lasota1993@gmail.com
+          MAIL_TO:   ${{ secrets.MAIL_TO }}      # michal.lasota1993@gmail.com
+          TZ:        ${{ secrets.TZ }}           # Europe/Warsaw
+        run: |
+          python tools/email_sender_attach.py
+
+      - name: Commit & push daily report (if updated)
+        run: |
+          git config --global user.name  "PPB Bot"
+          git config --global user.email "actions@github.com"
+          git add reports/latest_report.md reports/report-*.md || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Daily report email sent [skip ci]"
+            git push
+          fi
+
+      - name: Upload artifact (daily bundle)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ppb-daily-report
+          path: |
+            reports/latest_report.md
+            reports/report-*.md
+            reports/*.zip
+          if-no-files-found: warn
