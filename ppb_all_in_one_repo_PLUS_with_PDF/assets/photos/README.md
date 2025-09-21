@@ -1,0 +1,1 @@
+Tu dodawaj zdjęcia (z opisem źródła/licencji).
