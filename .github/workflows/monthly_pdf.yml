@@ -1,0 +1,69 @@
+
+name: Monthly PDF Report (1st day, 20:05 Warsaw)
+
+on:
+  schedule:
+    # Runs every day at 18:05 UTC (20:05 Warsaw in winter, 20:05/21:05 summer).
+    - cron: "5 18 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Run regardless of local time/date gate"
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Upgrade pip toolchain
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          else
+            pip install reportlab==3.6.13 PyYAML==6.0.1 Jinja2==3.1.4 python-dateutil==2.9.0.post0
+          fi
+
+      - name: Ensure reports folder exists
+        run: |
+          mkdir -p reports/monthly
+
+      - name: Generate monthly PDF
+        env:
+          FORCE: ${{ github.event.inputs.force }}
+          TZ: Europe/Warsaw
+        run: |
+          python tools/pdf_monthly.py
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: monthly-pdf
+          path: reports/monthly/PPB_Monthly_*.pdf
+          if-no-files-found: warn
+
+      - name: Commit & push PDF
+        run: |
+          git config --global user.name "PPB Bot"
+          git config --global user.email "github93@wp.pl"
+          git pull --rebase
+          git add reports/monthly/PPB_Monthly_*.pdf || true
+          git commit -m "chore(reports): add/refresh monthly PDF [skip ci]" || echo "No changes to commit"
+          git push
