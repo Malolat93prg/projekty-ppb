@@ -2,8 +2,11 @@ name: Auto Report (PPB)
 
 on:
   schedule:
-    - cron: "0 * * * *"   # co godzinę
+    - cron: "0 * * * *"    # co godzinę
   workflow_dispatch:       # ręczne uruchomienie
+
+permissions:
+  contents: write          # pozwala commitować raporty
 
 jobs:
   build:
@@ -27,6 +30,14 @@ jobs:
           python tools/generate_report.py
 
       - name: Send report via email
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          MAIL_FROM: ${{ secrets.MAIL_FROM }}
+          MAIL_TO:   ${{ secrets.MAIL_TO }}
+          TZ:        ${{ secrets.TZ }}
         run: |
           python tools/email_sender.py
 
