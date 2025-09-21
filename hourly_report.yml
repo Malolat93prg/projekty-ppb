@@ -1,0 +1,36 @@
+name: Hourly Report (repo-only)
+
+on:
+  schedule:
+    - cron: "0 * * * *"   # every hour (UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  hourly_report:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Generate hourly report
+        env:
+          TZ: Europe/Warsaw
+        run: |
+          python tools/generate_hourly_report.py
+
+      - name: Commit hourly report
+        run: |
+          git config --global user.name "PPB Bot"
+          git config --global user.email "github93@wp.pl"
+          git add reports/hourly
+          git commit -m "Hourly report [skip ci]" || echo "No changes"
+          git pull --rebase --autostash
+          git push
