@@ -1,0 +1,8 @@
+# PPB – Raport tygodniowy
+**Czas (Europe/Warsaw):** 2026-09-27 22:39
+
+## Status projektów
+- Bezpieczny Pieszy — OK
+- Zwolnij przy przejściu — OK
+- Odblask ratuje życie — OK
+
